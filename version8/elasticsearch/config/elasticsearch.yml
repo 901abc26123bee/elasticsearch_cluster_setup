@@ -1,0 +1,7 @@
+network.host: 0.0.0.0
+http.port: 9200
+# enable CORS settings for some third party front end for an Elasticsearch cluster like elasticsearch-head or dejavu
+http.cors.allow-origin: 'http://localhost:1358'
+http.cors.enabled: true
+http.cors.allow-headers: X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization
+http.cors.allow-credentials: true

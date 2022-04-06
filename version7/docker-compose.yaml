@@ -1,0 +1,103 @@
+version: "3.6"
+services:
+  es01:
+    # image: docker.elastic.co/elasticsearch/elasticsearch:8.1.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.2
+    restart: on-failure
+    container_name: es01
+    environment:
+      - node.name=es01
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es02,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+  es02:
+    # image: docker.elastic.co/elasticsearch/elasticsearch:8.1.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.2
+    container_name: es02
+    restart: on-failure
+    environment:
+      - node.name=es02
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01,es03
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata02:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+  es03:
+    # image: docker.elastic.co/elasticsearch/elasticsearch:8.1.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.2
+    restart: on-failure
+    container_name: es03
+    environment:
+      - node.name=es03
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=es01,es02
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata03:/usr/share/elasticsearch/data
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.17.2
+    container_name: kibana
+    volumes:
+      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+      - kibanadata:/usr/share/kibana/data
+    networks:
+      - elastic
+    ports:
+      - "5601:5601"
+
+  dejavu:
+    image: appbaseio/dejavu
+    container_name: dejavu
+    networks:
+      - elastic
+    depends_on:
+      - es01
+    ports:
+      - "1358:1358"
+    
+volumes:
+  esdata01:
+    driver: local
+  esdata02:
+    driver: local
+  esdata03:
+    driver: local
+  kibanadata:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge
